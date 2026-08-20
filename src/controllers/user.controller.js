@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
+import deleteImageOnCLoudinary from "../utils/deleteCloudinaryImage.js";
 
 const generateAccessAndRefreshTokens = async(userId) => {
     try {
@@ -285,6 +286,9 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading on cloudinary")
     }
 
+    const user1 = await User.findById(req.user?._id)
+    const oldImageUrl = user.avatar
+
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -296,6 +300,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
             new: true,
         }
     ).select("-password -refreshToken")
+
+    await deleteImageOnCLoudinary(oldImageUrl)
 
     return res
     .status(200)
